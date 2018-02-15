@@ -8,6 +8,21 @@ more actors, etc. until one million actors are created on the final level. Then,
 back its ordinal number (from 0 to 999999), which are summed on the previous level and sent back upstream,
 until reaching the root actor. (The answer should be 499999500000).
 
+## Results 2018 Macbook Pro 15" (Alec Kloss)
+
+### Goroutines
+
+- Go: 387 ms
+
+### Futures
+
+- Scala: 216 ms
+
+### Single-threaded
+
+- Scala: 7.8 ms
+- Go: 16 ms
+
 ## Results (on my shitty Macbook 12" '2015, **Core M**, OS X): 
 
 ### Actors
