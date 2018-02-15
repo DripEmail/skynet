@@ -6,6 +6,11 @@ lazy val root = (project in file(".")).
     version := "0.1.0",
 //    sbtVersion := "0.13.9",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor" % "2.4.1"
+      "com.typesafe.akka" %% "akka-actor" % "2.5.4"
     )
   )
+
+cancelable in Global := true
+
+fork := true
+

@@ -7,3 +7,7 @@ lazy val root = (project in file(".")).
   )
 
 enablePlugins(JmhPlugin)
+
+fork := true
+
+cancelable in Global := true
