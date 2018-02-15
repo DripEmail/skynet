@@ -11,29 +11,56 @@ import scala.concurrent.duration._
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Thread)
-@Warmup(iterations = 20)
-@Measurement(iterations = 20)
-@Fork(20)
+@Warmup(iterations = 4)
+@Measurement(iterations = 4)
+@Fork(2)
 class Skynet {
 
-  def skynetAsync(num: Int, size: Int, div: Int): Future[Long] =
-    if (size == 1) Future(num)
+  def skynetAsync1(num: Int, size: Int, div: Int): Future[Long] =
+    if (size == 1) Future.successful(num)
     else Future.sequence {
-      (0 until div) map (i => skynetAsync(num + i * size / div, size / div, div))
+      (0 until div) map (i => skynetAsync1(num + i * size / div, size / div, div))
     } map (_.sum)
 
-  def skynetSync(num: Int, size: Int, div: Int): Long =
-    if (size > 1) (0 until div).map(i =>
-      skynetSync(num + i * size / div, size / div, div)).sum
-    else num
+  def skynetAsync2(numAndSize: Future[(Int,Int)], div: Int): Future[Long] =
+    numAndSize flatMap { case (num,size) =>
+      if (size == 1) Future.successful(num)
+      else Future.sequence {
+        (0 until div) map (i => skynetAsync2(
+          numAndSize map { case (num,size) =>
+            val f = size / div
+            (num + i * f, f)
+          }, div
+        ))
+      } map (_.sum)
+    }
+
+  def skynetSync(num: Int, size: Int, div: Int): Long = {
+    var sum: Long = 0
+    if (size > 1) {
+      (0 until div).foreach(i =>
+        sum = sum + skynetSync(num + i * size / div, size / div, div)
+      )
+      sum
+    } else {
+      num
+    }
+  }
+
+  val initialSize = 1000000
 
   @Benchmark
-  def skynetAsyncBench(): Long = {
-    Await.result(skynetAsync(0, 1000000, 10), Duration.Inf)
+  def skynetAsync1Bench(): Long = {
+    Await.result(skynetAsync1(0, initialSize, 10), Duration.Inf)
+  }
+
+  @Benchmark
+  def skynetAsync2Bench(): Long = {
+    Await.result(skynetAsync2(Future.successful(0, initialSize), 10), Duration.Inf)
   }
 
   @Benchmark
   def skynetSyncBench(): Long = {
-    skynetSync(0, 1000000, 10)
+    skynetSync(0, initialSize, 10)
   }
 }
